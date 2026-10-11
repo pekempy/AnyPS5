@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  workflows: write
 
 jobs:
   sync:
@@ -18,10 +17,15 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Hard-reset main to upstream main
+      - name: Hard-reset main to upstream main, keep fork's own workflow files
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git remote add upstream https://github.com/boykopovar/AnyPS5.git
           git fetch upstream main
           git checkout main
           git reset --hard upstream/main
+          git checkout HEAD@{1} -- .github/workflows
+          git add .github/workflows
+          git diff --cached --quiet || git commit -m "Restore fork CI workflows after upstream sync"
           git push origin main --force
